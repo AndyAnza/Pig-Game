@@ -22,6 +22,7 @@ let player2 = {
   curr: 0,
   totalScore: 0,
 };
+
 let player1Turn = true;
 let currentPlayer = player1;
 diceImg.style.opacity = 0;
@@ -65,13 +66,13 @@ const switchPlayer = () => {
   if (player1Turn === true) {
     player1Turn = false;
     currentPlayer = player2;
-    focusPlayer1.classList.remove('player--active');
-    focusPlayer2.classList.add('player--active');
+    focusPlayer1.classList.toggle('player--active');
+    focusPlayer2.classList.toggle('player--active');
   } else {
     player1Turn = true;
     currentPlayer = player1;
-    focusPlayer2.classList.remove('player--active');
-    focusPlayer1.classList.add('player--active');
+    focusPlayer2.classList.toggle('player--active');
+    focusPlayer1.classList.toggle('player--active');
   }
   console.log(player1Turn, currentPlayer);
 };
