@@ -1,142 +1,97 @@
 'use strict';
-const diceImg = document.querySelector('.dice');
-const rollBtn = document.querySelector('.btn--roll');
-const holdBtn = document.querySelector('.btn--hold');
-const newGameBtn = document.querySelector('.btn--new');
-const currentScoreLabel0 = document.getElementById('current--0');
-const totalScoreLabel0 = document.getElementById('score--0');
-const currentScoreLabel1 = document.getElementById('current--1');
-const totalScoreLabel1 = document.getElementById('score--1');
-const focusPlayer1 = document.querySelector('.player--0');
-const focusPlayer2 = document.querySelector('.player--1');
 
-let player1 = {
-  name: 'Player 1',
-  acc: 0,
-  curr: 0,
-  totalScore: 0,
+// Selecting elements
+const player0El = document.querySelector('.player--0');
+const player1El = document.querySelector('.player--1');
+const score0El = document.querySelector('#score--0');
+const score1El = document.getElementById('score--1');
+const current0El = document.getElementById('current--0');
+const current1El = document.getElementById('current--1');
+
+const diceEl = document.querySelector('.dice');
+const btnNew = document.querySelector('.btn--new');
+const btnRoll = document.querySelector('.btn--roll');
+const btnHold = document.querySelector('.btn--hold');
+
+let scores, currentScore, activePlayer, playing;
+
+// Starting conditions
+const init = function () {
+  scores = [0, 0];
+  currentScore = 0;
+  activePlayer = 0;
+  playing = true;
+
+  score0El.textContent = 0;
+  score1El.textContent = 0;
+  current0El.textContent = 0;
+  current1El.textContent = 0;
+
+  diceEl.classList.add('hidden');
+  player0El.classList.remove('player--winner');
+  player1El.classList.remove('player--winner');
+  player0El.classList.add('player--active');
+  player1El.classList.remove('player--active');
 };
-let player2 = {
-  name: 'Player 2',
-  acc: 0,
-  curr: 0,
-  totalScore: 0,
+init();
+
+const switchPlayer = function () {
+  document.getElementById(`current--${activePlayer}`).textContent = 0;
+  currentScore = 0;
+  activePlayer = activePlayer === 0 ? 1 : 0;
+  player0El.classList.toggle('player--active');
+  player1El.classList.toggle('player--active');
 };
 
-let player1Turn = true;
-let currentPlayer = player1;
-diceImg.style.opacity = 0;
+// Rolling dice functionality
+btnRoll.addEventListener('click', function () {
+  if (playing) {
+    // 1. Generating a random dice roll
+    const dice = Math.trunc(Math.random() * 6) + 1;
 
-const randomInt = (min, max) => {
-  return Math.floor(Math.random() * (max - min + 1) + min);
-};
+    // 2. Display dice
+    diceEl.classList.remove('hidden');
+    diceEl.src = `dice-${dice}.png`;
 
-const updateCurrentScore = (dice, currentPlayer) => {
-  if (dice > 1) {
-    currentPlayer.curr = dice;
-    currentPlayer.acc = currentPlayer.acc + currentPlayer.curr;
-  } else {
-    restartCurrent(currentPlayer);
-    restartTotal(currentPlayer);
-    switchPlayer();
+    // 3. Check for rolled 1
+    if (dice !== 1) {
+      // Add dice to current score
+      currentScore += dice;
+      document.getElementById(`current--${activePlayer}`).textContent =
+        currentScore;
+    } else {
+      // Switch to next player
+      switchPlayer();
+    }
   }
-  if (player1Turn) {
-    currentScoreLabel0.textContent = currentPlayer.acc;
-  } else {
-    currentScoreLabel1.textContent = currentPlayer.acc;
+});
+
+btnHold.addEventListener('click', function () {
+  if (playing) {
+    // 1. Add current score to active player's score
+    scores[activePlayer] += currentScore;
+    // scores[1] = scores[1] + currentScore
+
+    document.getElementById(`score--${activePlayer}`).textContent =
+      scores[activePlayer];
+
+    // 2. Check if player's score is >= 100
+    if (scores[activePlayer] >= 100) {
+      // Finish the game
+      playing = false;
+      diceEl.classList.add('hidden');
+
+      document
+        .querySelector(`.player--${activePlayer}`)
+        .classList.add('player--winner');
+      document
+        .querySelector(`.player--${activePlayer}`)
+        .classList.remove('player--active');
+    } else {
+      // Switch to the next player
+      switchPlayer();
+    }
   }
-};
+});
 
-const updateTotalScore = currentPlayer => {
-  currentPlayer.totalScore = currentPlayer.totalScore + currentPlayer.acc;
-  console.log(
-    'totalScore:',
-    currentPlayer.totalScore,
-    'acc:',
-    currentPlayer.acc
-  );
-  if (player1Turn) {
-    totalScoreLabel0.textContent = currentPlayer.totalScore;
-  } else if (!player1Turn) {
-    totalScoreLabel1.textContent = currentPlayer.totalScore;
-  }
-};
-
-const switchPlayer = () => {
-  if (player1Turn === true) {
-    player1Turn = false;
-    currentPlayer = player2;
-    focusPlayer1.classList.toggle('player--active');
-    focusPlayer2.classList.toggle('player--active');
-  } else {
-    player1Turn = true;
-    currentPlayer = player1;
-    focusPlayer2.classList.toggle('player--active');
-    focusPlayer1.classList.toggle('player--active');
-  }
-  console.log(player1Turn, currentPlayer);
-};
-
-const restartCurrent = currentPlayer => {
-  currentPlayer.acc = 0;
-  if (player1Turn) {
-    currentScoreLabel0.textContent = currentPlayer.acc;
-  } else {
-    currentScoreLabel1.textContent = currentPlayer.acc;
-  }
-};
-
-const restartTotal = currentPlayer => {
-  currentPlayer.totalScore = 0;
-  if (player1Turn) {
-    totalScoreLabel0.textContent = currentPlayer.totalScore;
-  } else {
-    totalScoreLabel1.textContent = currentPlayer.totalScore;
-  }
-};
-
-const rollDice = () => {
-  const dice = randomInt(1, 6);
-  console.log(dice);
-  diceImg.style.opacity = 100;
-  diceImg.src = `dice-${dice}.png`;
-  updateCurrentScore(dice, currentPlayer);
-};
-
-const holdScore = () => {
-  updateTotalScore(currentPlayer);
-  restartCurrent(currentPlayer);
-  // winner;
-  if (currentPlayer.totalScore >= 10) {
-    alert(`${currentPlayer.name} is the winner 🎖`);
-    restartGame();
-  } else {
-    switchPlayer();
-  }
-};
-
-const restartScores = () => {
-  restartCurrent(currentPlayer);
-  restartTotal(currentPlayer);
-};
-
-const restartGame = () => {
-  currentPlayer = player1;
-  player1.acc = 0;
-  currentScoreLabel0.textContent = player1.acc;
-  player2.acc = 0;
-  currentScoreLabel1.textContent = player2.acc;
-  player1.totalScore = 0;
-  totalScoreLabel0.textContent = player1.totalScore;
-  player2.totalScore = 0;
-  totalScoreLabel1.textContent = player2.totalScore;
-  focusPlayer1.classList.add('player--active');
-  focusPlayer2.classList.remove('player--active');
-  diceImg.style.opacity = 0;
-};
-
-// EVENT LISTENERS
-rollBtn.addEventListener('click', rollDice);
-holdBtn.addEventListener('click', holdScore);
-newGameBtn.addEventListener('click', restartGame);
-console.log(`player1Turn: ${player1Turn}`);
+btnNew.addEventListener('click', init);
